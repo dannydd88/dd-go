@@ -1,3 +1,3 @@
-module github.com/dannydd88/gobase
+module github.com/dannydd88/dd-go
 
-go 1.16
+go 1.19
