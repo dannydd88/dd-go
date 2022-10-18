@@ -2,6 +2,21 @@ package dd
 
 import "time"
 
+// Generic type returns a pointer to the value passed in
+func Ptr[T any](v T) *T {
+	return &v
+}
+
+// Generic type returns the value of the pointer passed in or
+// default value of this type if pointer is nil
+func Val[T any](v *T) T {
+	if v != nil {
+		return *v
+	}
+	var ret T
+	return ret
+}
+
 // String returns a pointer to the string value passed in.
 func String(v string) *string {
 	return &v
