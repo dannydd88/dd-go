@@ -2,19 +2,25 @@ package dd
 
 import (
 	"context"
-	"math"
 	"runtime"
 	"sync"
+	"time"
 )
 
 const (
 	DEFAULT_QUEUE_SIZE = 1024
 )
 
+type WorkerPoolRunnerOptions struct {
+	QueueSize   uint
+	Concurrency uint
+	Logger      Logger
+}
+
 type WorkerPoolRunner struct {
 	logger Logger
 	// queueing incomming |Task|
-	queue chan Task
+	queue chan *Task
 	// concurrency count of worker
 	concurrency uint
 	ctx         context.Context
@@ -32,7 +38,31 @@ func (runner *WorkerPoolRunner) Post(task Task) error {
 	}
 
 	// ). enqueue task
-	runner.queue <- task
+	runner.queue <- &task
+
+	return nil
+}
+
+func (runner *WorkerPoolRunner) PostDelay(task Task, delay time.Duration) error {
+	// ). check if it is canceled
+	e := runner.ctx.Err()
+	if e != nil {
+		runner.log("[WorkerPoolRunner]", "already stoped")
+		return e
+	}
+
+	// ). apply delay goroutine
+	go func() {
+		<-time.After(delay)
+		// check if it is canceled again
+		e := runner.ctx.Err()
+		if e != nil {
+			runner.log("[WorkerPoolRunner]", "already stoped in delay fired")
+			return
+		}
+		// enqueu task
+		runner.queue <- &task
+	}()
 
 	return nil
 }
@@ -53,11 +83,6 @@ func (runner *WorkerPoolRunner) StopAndWait() error {
 }
 
 func (runner *WorkerPoolRunner) init() *WorkerPoolRunner {
-	// ). init context
-	ctx, cancel := context.WithCancel(runner.ctx)
-	runner.ctx = ctx
-	runner.cancelFunc = cancel
-
 	// ). start goroutines
 	for i := uint(0); i < runner.concurrency; i++ {
 		go runner.run()
@@ -74,7 +99,7 @@ func (runner *WorkerPoolRunner) run() {
 	for alive := true; alive; {
 		select {
 		case task := <-runner.queue:
-			task.Run()
+			(*task).Run()
 		case <-runner.ctx.Done():
 			alive = false
 		}
@@ -89,25 +114,26 @@ func (runner *WorkerPoolRunner) log(args ...any) {
 
 // Create function
 
-func NewWorkerPoolRunnerWithConfig(concurrency, queueSize uint, logger Logger) *WorkerPoolRunner {
-	if concurrency == 0 {
-		concurrency = uint(math.Max(1, float64(runtime.NumCPU())-1))
+func NewWorkerPoolRunner(options *WorkerPoolRunnerOptions) *WorkerPoolRunner {
+	// check queueSize
+	if options.QueueSize == 0 {
+		options.QueueSize = DEFAULT_QUEUE_SIZE
 	}
-	if queueSize == 0 {
-		queueSize = DEFAULT_QUEUE_SIZE
+	// check concurrency
+	if options.Concurrency == 0 {
+		options.Concurrency = uint(runtime.NumCPU())
 	}
+	// init context
+	ctx, cancel := context.WithCancel(context.Background())
 	return (&WorkerPoolRunner{
-		logger:      logger,
-		queue:       make(chan Task, queueSize),
-		concurrency: concurrency,
-		ctx:         context.Background(),
+		logger:      options.Logger,
+		queue:       make(chan *Task, options.QueueSize),
+		concurrency: options.Concurrency,
+		ctx:         ctx,
+		cancelFunc:  cancel,
 	}).init()
 }
 
-func NewWorkerPoolRunnerWithLogger(logger Logger) *WorkerPoolRunner {
-	return NewWorkerPoolRunnerWithConfig(0, 0, logger)
-}
-
-func NewWorkerPoolRunner() *WorkerPoolRunner {
-	return NewWorkerPoolRunnerWithLogger(nil)
+func DefaultWorkerPoolRunner() *WorkerPoolRunner {
+	return NewWorkerPoolRunner(&WorkerPoolRunnerOptions{})
 }
