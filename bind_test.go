@@ -23,13 +23,13 @@ func join(a string, b int) string {
 	return fmt.Sprintf("%s-%d", a, b)
 }
 
-func increase(values ...int) int {
-	var result int
-	for _, v := range values {
-		result += v
-	}
-	return result
-}
+// func increase(values ...int) int {
+// 	var result int
+// 	for _, v := range values {
+// 		result += v
+// 	}
+// 	return result
+// }
 
 func TestBind0(t *testing.T) {
 	assert := assert.New(t)
