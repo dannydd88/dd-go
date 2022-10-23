@@ -4,7 +4,37 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestPtrAndVal(t *testing.T) {
+	assert := assert.New(t)
+
+	stringVal := "a"
+	stringPtr := Ptr(stringVal)
+	assert.Equal(stringVal, *stringPtr)
+	assert.Equal(stringVal, Val(stringPtr))
+
+	intVal := 1
+	intPtr := Ptr(intVal)
+	assert.Equal(intVal, *intPtr)
+	assert.Equal(intVal, Val(intPtr))
+}
+
+func TestNilPtrVal(t *testing.T) {
+	assert := assert.New(t)
+
+	var nilStringPtr *string
+	assert.Equal("", Val(nilStringPtr))
+	stringDefaultVal := "a"
+	assert.Equal(stringDefaultVal, ValD(nilStringPtr, stringDefaultVal))
+
+	var nilIntPtr *int
+	assert.Equal(0, Val(nilIntPtr))
+	intDefaultVal := 1
+	assert.Equal(intDefaultVal, ValD(nilIntPtr, intDefaultVal))
+}
 
 var testCasesStringSlice = [][]string{
 	{"a", "b", "c", "d", "e"},
