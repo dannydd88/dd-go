@@ -75,6 +75,10 @@ type defaultLevelLogger struct {
 	level       LogLevel
 }
 
+func (l defaultLevelLogger) Log(args ...any) {
+	l.Info(args...)
+}
+
 func (l defaultLevelLogger) Error(args ...any) {
 	if l.level >= ERROR {
 		l.errorLogger.Println(args...)

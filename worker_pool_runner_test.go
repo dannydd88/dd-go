@@ -15,7 +15,7 @@ func TestStopTwice(t *testing.T) {
 		&WorkerPoolRunnerOptions{
 			Concurrency: 1,
 			QueueSize:   10,
-			Logger:      NewDefaultLogger(),
+			Logger:      NewLevelLogger(DEBUG),
 		})
 	e := runner.StopAndWait()
 	assert.Nil(e)
@@ -30,7 +30,7 @@ func TestAfterStop(t *testing.T) {
 		&WorkerPoolRunnerOptions{
 			Concurrency: 1,
 			QueueSize:   10,
-			Logger:      NewDefaultLogger(),
+			Logger:      NewLevelLogger(DEBUG),
 		})
 	e := runner.StopAndWait()
 	assert.Nil(e)
@@ -54,7 +54,7 @@ func TestCastToTaskRunnerInterface(t *testing.T) {
 		&WorkerPoolRunnerOptions{
 			Concurrency: 1,
 			QueueSize:   10,
-			Logger:      NewDefaultLogger(),
+			Logger:      NewLevelLogger(DEBUG),
 		})
 
 	{
@@ -91,7 +91,7 @@ func TestPost1(t *testing.T) {
 		&WorkerPoolRunnerOptions{
 			Concurrency: 1,
 			QueueSize:   10,
-			Logger:      NewDefaultLogger(),
+			Logger:      NewLevelLogger(DEBUG),
 		})
 
 	e := runner.Post(Bind0(func() error {
@@ -116,7 +116,7 @@ func TestPost2With1Concurrency(t *testing.T) {
 		&WorkerPoolRunnerOptions{
 			Concurrency: 1,
 			QueueSize:   10,
-			Logger:      NewDefaultLogger(),
+			Logger:      NewLevelLogger(DEBUG),
 		})
 
 	for i := 0; i < 10; i++ {
@@ -144,7 +144,7 @@ func TestPost2With2Concurrency(t *testing.T) {
 		&WorkerPoolRunnerOptions{
 			Concurrency: 2,
 			QueueSize:   10,
-			Logger:      NewDefaultLogger(),
+			Logger:      NewLevelLogger(DEBUG),
 		})
 
 	for i := 0; i < 10; i++ {
@@ -213,7 +213,7 @@ func TestPostDelayFireAfterStop(t *testing.T) {
 
 	runner := NewWorkerPoolRunner(&WorkerPoolRunnerOptions{
 		Concurrency: 1,
-		Logger:      NewDefaultLogger(),
+		Logger:      NewLevelLogger(DEBUG),
 	})
 
 	{

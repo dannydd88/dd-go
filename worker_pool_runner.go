@@ -14,11 +14,11 @@ const (
 type WorkerPoolRunnerOptions struct {
 	QueueSize   uint
 	Concurrency uint
-	Logger      Logger
+	Logger      LevelLogger
 }
 
 type WorkerPoolRunner struct {
-	logger Logger
+	logger LevelLogger
 	// queueing incomming |Task|
 	queue chan *Task
 	// concurrency count of worker
@@ -33,7 +33,7 @@ func (runner *WorkerPoolRunner) Post(task Task) error {
 	// ). check if it is canceled
 	e := runner.ctx.Err()
 	if e != nil {
-		runner.log("[WorkerPoolRunner]", "already stoped")
+		runner.warnLog("[WorkerPoolRunner]", "already stoped")
 		return e
 	}
 
@@ -47,7 +47,7 @@ func (runner *WorkerPoolRunner) PostDelay(task Task, delay time.Duration) error 
 	// ). check if it is canceled
 	e := runner.ctx.Err()
 	if e != nil {
-		runner.log("[WorkerPoolRunner]", "already stoped")
+		runner.warnLog("[WorkerPoolRunner]", "already stoped")
 		return e
 	}
 
@@ -57,7 +57,7 @@ func (runner *WorkerPoolRunner) PostDelay(task Task, delay time.Duration) error 
 		// check if it is canceled again
 		e := runner.ctx.Err()
 		if e != nil {
-			runner.log("[WorkerPoolRunner]", "already stoped in delay fired")
+			runner.warnLog("[WorkerPoolRunner]", "already stoped in delay fired")
 			return
 		}
 		// enqueu task
@@ -72,7 +72,7 @@ func (runner *WorkerPoolRunner) StopAndWait() error {
 	// ). check if it is canceled
 	e := runner.ctx.Err()
 	if e != nil {
-		runner.log("[WorkerPoolRunner]", "already stoped")
+		runner.warnLog("[WorkerPoolRunner]", "already stoped")
 		return e
 	}
 
@@ -94,21 +94,34 @@ func (runner *WorkerPoolRunner) init() *WorkerPoolRunner {
 func (runner *WorkerPoolRunner) run() {
 	runner.wg.Add(1)
 	defer runner.wg.Done()
-	runner.log("[WorkerPoolRunner]", "runner inited")
+	runner.debugLog("[WorkerPoolRunner]", "runner inited")
 
 	for alive := true; alive; {
 		select {
 		case task := <-runner.queue:
 			(*task).Run()
 		case <-runner.ctx.Done():
+			runner.infoLog("[WorkerPoolRunner]", "receive canceled, exit goroutine")
 			alive = false
 		}
 	}
 }
 
-func (runner *WorkerPoolRunner) log(args ...any) {
+func (runner *WorkerPoolRunner) debugLog(args ...any) {
 	if runner.logger != nil {
-		runner.logger.Log(args...)
+		runner.logger.Debug(args...)
+	}
+}
+
+func (runner *WorkerPoolRunner) infoLog(args ...any) {
+	if runner.logger != nil {
+		runner.logger.Info(args...)
+	}
+}
+
+func (runner *WorkerPoolRunner) warnLog(args ...any) {
+	if runner.logger != nil {
+		runner.logger.Warn(args...)
 	}
 }
 
