@@ -60,10 +60,10 @@ func (l defaultLogger) Log(args ...any) {
 // with LogLevel
 func NewLevelLogger(level LogLevel) LevelLogger {
 	return &defaultLevelLogger{
-		errorLogger: log.New(os.Stderr, "E ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile|log.Lmsgprefix),
-		warnLogger:  log.New(os.Stdout, "W ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile|log.Lmsgprefix),
-		infoLogger:  log.New(os.Stdout, "I ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile|log.Lmsgprefix),
-		debugLogger: log.New(os.Stdout, "D ", log.LstdFlags|log.Lmicroseconds|log.Llongfile|log.Lmsgprefix),
+		errorLogger: log.New(os.Stderr, "E ", log.LstdFlags|log.Lmicroseconds|log.Lmsgprefix),
+		warnLogger:  log.New(os.Stdout, "W ", log.LstdFlags|log.Lmicroseconds|log.Lmsgprefix),
+		infoLogger:  log.New(os.Stdout, "I ", log.LstdFlags|log.Lmicroseconds|log.Lmsgprefix),
+		debugLogger: log.New(os.Stdout, "D ", log.LstdFlags|log.Lmicroseconds|log.Lmsgprefix),
 		level:       level,
 	}
 }
