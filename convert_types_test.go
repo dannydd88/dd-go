@@ -15,11 +15,13 @@ func TestPtrAndVal(t *testing.T) {
 	stringPtr := Ptr(stringVal)
 	assert.Equal(stringVal, *stringPtr)
 	assert.Equal(stringVal, Val(stringPtr))
+	assert.Equal(stringVal, ValD(stringPtr, "123"))
 
 	intVal := 1
 	intPtr := Ptr(intVal)
 	assert.Equal(intVal, *intPtr)
 	assert.Equal(intVal, Val(intPtr))
+	assert.Equal(intVal, ValD(intPtr, 1024))
 }
 
 func TestNilPtrVal(t *testing.T) {

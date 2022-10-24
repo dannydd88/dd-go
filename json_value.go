@@ -5,8 +5,8 @@ package dd
 //
 //	Example:
 //
-//	values := base.JSONValue{
+//	values := dd.JSONValue{
 //		"Foo": "Bar",
 //	}
 //	values["Baz"] = "Qux"
-type JSONValue map[string]interface{}
+type JSONValue map[string]any
