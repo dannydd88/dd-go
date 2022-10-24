@@ -31,6 +31,7 @@ const (
 
 // A LevelLogger is a interface to log message with level and can be filter by logger
 type LevelLogger interface {
+	Logger
 	Error(...any)
 	Warn(...any)
 	Info(...any)
