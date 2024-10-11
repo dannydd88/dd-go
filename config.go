@@ -1,34 +1,13 @@
 package dd
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-
-	"gopkg.in/yaml.v3"
 )
 
 type ConfigLoader[T any] interface {
 	Load(out *T) error
-}
-
-func NewJSONLoader[T any](path *string) ConfigLoader[T] {
-	return &JSONLoader[T]{
-		reader: &FileReader{
-			path: path,
-		},
-	}
-}
-
-func NewYAMLLoader[T any](path *string) ConfigLoader[T] {
-	return &YAMLLoader[T]{
-		reader: &FileReader{
-			path: path,
-		},
-	}
 }
 
 type FileReader struct {
@@ -65,48 +44,6 @@ func (r *FileReader) Close() error {
 	fp := r.opendFile
 	r.opendFile = nil
 	return fp.Close()
-}
-
-type JSONLoader[T any] struct {
-	reader io.ReadCloser
-}
-
-func (loader *JSONLoader[T]) Load(out *T) error {
-	// ). check reader
-	if loader.reader == nil {
-		return errors.New("should init reader first")
-	}
-
-	// ). read content from reader
-	defer loader.reader.Close()
-	data, err := io.ReadAll(loader.reader)
-	if err != nil {
-		return err
-	}
-
-	// ). parse json to out
-	return json.Unmarshal(data, out)
-}
-
-type YAMLLoader[T any] struct {
-	reader io.ReadCloser
-}
-
-func (loader *YAMLLoader[T]) Load(out *T) error {
-	// ). check reader
-	if loader.reader == nil {
-		return errors.New("should init reader first")
-	}
-
-	// ). read content from reader
-	defer loader.reader.Close()
-	data, err := io.ReadAll(loader.reader)
-	if err != nil {
-		return err
-	}
-
-	// parse yaml to out
-	return yaml.Unmarshal(data, out)
 }
 
 func ensurePath(path *string) (*string, error) {

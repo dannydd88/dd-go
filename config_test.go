@@ -3,6 +3,7 @@ package dd
 import (
 	"errors"
 	"io"
+	"os"
 	"strings"
 	"testing"
 
@@ -23,10 +24,10 @@ func (m *MockReader) Close() error {
 }
 
 type TestConfig struct {
-	F1 *int    `json:"f1" yaml:"f1"`
-	F2 *bool   `json:"f2" yaml:"f2"`
-	F3 *string `json:"f3" yaml:"f3"`
-	F4 *string `json:"f4,omitempty" yaml:"f4,omitempty"`
+	F1 *int    `json:"f1" yaml:"f1" ini:"f1"`
+	F2 *bool   `json:"f2" yaml:"f2" ini:"f2"`
+	F3 *string `json:"f3" yaml:"f3" ini:"f3"`
+	F4 *string `json:"f4,omitempty" yaml:"f4,omitempty" ini:"f4,omitempty"`
 }
 
 func TestLoadJSON1(t *testing.T) {
@@ -184,6 +185,113 @@ f3: null
 	assert.Nil(config.F4)
 }
 
+func TestLoadINI1(t *testing.T) {
+	assert := assert.New(t)
+
+	payload := `
+[test]
+f1=1024
+f2=true
+f3=hello
+f4=world`
+
+	f, err := os.CreateTemp("", "test*.ini")
+	defer os.Remove(f.Name())
+	assert.Nil(err)
+	err = os.WriteFile(f.Name(), []byte(payload), 0666)
+	assert.Nil(err)
+
+	loader := NewINILoader[TestConfig](Ptr(f.Name()), Ptr("test"))
+
+	var config TestConfig
+	err = loader.Load(&config)
+
+	assert.Nil(err)
+	assert.Equal(1024, Val(config.F1))
+	assert.Equal(true, Val(config.F2))
+	assert.Equal("hello", Val(config.F3))
+	assert.Equal("world", Val(config.F4))
+}
+
+func TestLoadINI2(t *testing.T) {
+	assert := assert.New(t)
+
+	payload := `
+[test]
+f1=1024
+f2=true
+f3=hello`
+
+	f, err := os.CreateTemp("", "test*.ini")
+	defer os.Remove(f.Name())
+	assert.Nil(err)
+	err = os.WriteFile(f.Name(), []byte(payload), 0666)
+	assert.Nil(err)
+
+	loader := NewINILoader[TestConfig](Ptr(f.Name()), Ptr("test"))
+
+	var config TestConfig
+	err = loader.Load(&config)
+
+	assert.Nil(err)
+	assert.Equal(1024, Val(config.F1))
+	assert.Equal(true, Val(config.F2))
+	assert.Equal("hello", Val(config.F3))
+	assert.Nil(config.F4)
+}
+
+func TestLoadINI3(t *testing.T) {
+	assert := assert.New(t)
+
+	payload := `
+[test]
+`
+
+	f, err := os.CreateTemp("", "test*.ini")
+	defer os.Remove(f.Name())
+	assert.Nil(err)
+	err = os.WriteFile(f.Name(), []byte(payload), 0666)
+	assert.Nil(err)
+
+	loader := NewINILoader[TestConfig](Ptr(f.Name()), Ptr("test"))
+
+	var config TestConfig
+	err = loader.Load(&config)
+
+	assert.Nil(err)
+	assert.Nil(config.F1)
+	assert.Nil(config.F2)
+	assert.Nil(config.F3)
+	assert.Nil(config.F4)
+}
+
+func TestLoadINI4(t *testing.T) {
+	assert := assert.New(t)
+
+	payload := `
+[test]
+f1=1024
+f2=true
+f3=hello`
+
+	f, err := os.CreateTemp("", "test*.ini")
+	defer os.Remove(f.Name())
+	assert.Nil(err)
+	err = os.WriteFile(f.Name(), []byte(payload), 0666)
+	assert.Nil(err)
+
+	loader := NewINILoader[TestConfig](Ptr(f.Name()), Ptr("default"))
+
+	var config TestConfig
+	err = loader.Load(&config)
+
+	assert.NotNil(err)
+	assert.Nil(config.F1)
+	assert.Nil(config.F2)
+	assert.Nil(config.F3)
+	assert.Nil(config.F4)
+}
+
 func TestLoadJSONNilReader(t *testing.T) {
 	assert := assert.New(t)
 
@@ -204,6 +312,31 @@ func TestLoadYAMLNilReader(t *testing.T) {
 	err := loader.Load(&config)
 
 	assert.NotNil(err)
+}
+
+func TestLoadINIInvalidParam(t *testing.T) {
+	assert := assert.New(t)
+
+	{
+		loader := NewINILoader[TestConfig](Ptr(" "), Ptr("test"))
+		var config TestConfig
+		err := loader.Load(&config)
+		assert.NotNil(err)
+	}
+
+	{
+		loader := NewINILoader[TestConfig](Ptr("/tmx/123.ini"), Ptr(" "))
+		var config TestConfig
+		err := loader.Load(&config)
+		assert.NotNil(err)
+	}
+
+	{
+		loader := NewINILoader[TestConfig](Ptr("/tmx/123.ini"), Ptr("test"))
+		var config TestConfig
+		err := loader.Load(&config)
+		assert.NotNil(err)
+	}
 }
 
 type ErrorReader struct{}

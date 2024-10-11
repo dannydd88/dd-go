@@ -1,10 +1,11 @@
 module github.com/dannydd88/dd-go
 
-go 1.19
+go 1.23
 
 require (
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.9.0
 	gopkg.in/yaml.v3 v3.0.1
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (
